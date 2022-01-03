@@ -2,17 +2,26 @@
 
 import * as ws from 'ws';
 import {Logger} from "../Logger/Logger";
-import {TConnectedUser} from "./TConnectedUser";
-import {TSocketRequest} from "./TSocketRequest";
 import {Timer} from "../Timer/Timer";
-import {TSocketResponse} from "./TSocketResponse";
-import {
-    TWSRAuthenticatePleaseResponse,
-    TWSRAuthenticateRequest, TWSRAuthenticateResponse, TWSRON, TWSRSQL,
-    WSRAuthenticate,
-    WSRAuthenticatePlease, WSRON, WSRSQL
-} from "./TMessages";
+
 import {wsrSQL} from "./wsrSQL";
+import {wsrDataRequest} from "./wsrDataRequest";
+import {
+    TSocketRequest,
+    TSocketResponse,
+    WSRAuthenticate,
+    TWSRAuthenticateRequest,
+    TWSRAuthenticateResponse,
+    WSRON,
+    TWSRON,
+    TWSRSQL,
+    TWSRDataRequest,
+    WSRDataRequest,
+    WSRSQL,
+    WSRAuthenticatePlease,
+    TWSRAuthenticatePleaseResponse
+} from "sksql";
+import {TConnectedUser} from "./TConnectedUser";
 
 export class CSocket {
     private static _instance: CSocket = undefined;
@@ -122,6 +131,8 @@ export class CSocket {
 ///////////////////////// SQL query received
                     case WSRSQL:
                         return wsrSQL(requestEnv, this, client.id, (payload.param) as TWSRSQL);
+                    case WSRDataRequest:
+                        return wsrDataRequest(requestEnv, this, client.id, (payload.param) as TWSRDataRequest);
 ///////////////////////// UNKNOWN MESSAGES
                     default: {
                         Logger.instance.write("Unknown message " + payload.message);

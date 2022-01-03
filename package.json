@@ -11,7 +11,7 @@
   "scripts": {
     "00-skserver-runAll": "npm run 02-skserver-build",
     "02-skserver-build": "tsc",
-    "03-skserver-run-local": "cross-env SKDB_PATH=C:\\SKSQL_DBS\\1\\aaabbbcccceffef\\ SKWORKER_ID=5 SKWORKER_PORT=30000 node build/main.js"
+    "03-skserver-run-local": "cross-env SKDB_PATH=C:\\SKSQL_DBS\\1\\repo\\ SKWORKER_ID=5 SKWORKER_PORT=30000 node build/main.js"
   },
   "license": "SSPL",
   "devDependencies": {
@@ -20,7 +20,7 @@
     "cross-env": "^7.0.3"
   },
   "dependencies": {
-    "sksql": "^1.0.4",
+    "sksql": "file:../sksql",
     "ws": "^8.3.0"
   }
 }

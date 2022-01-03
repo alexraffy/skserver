@@ -1,4 +1,4 @@
-import {TAuthSession} from "./TAuthSession";
+import {TAuthSession} from "sksql";
 
 
 export interface TConnectedUser {
