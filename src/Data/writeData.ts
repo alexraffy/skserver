@@ -1,14 +1,14 @@
-import {DBData, ITable, readTableDefinition} from "sksql";
+import {SKSQL, ITable, readTableDefinition} from "sksql";
 import * as fs from "fs";
 import * as path from "path"
 
-export function writeData(dbFolder: string, d: DBData, callback) {
+export function writeData(dbFolder: string, d: SKSQL, callback) {
 
     let currentTableIndex = -1;
     processNextTable(dbFolder, d, currentTableIndex, callback);
 }
 
-function processNextTable(dbFolder: string, d: DBData, currentTableIndex: number, callback) {
+function processNextTable(dbFolder: string, d: SKSQL, currentTableIndex: number, callback) {
     currentTableIndex++;
     if (currentTableIndex === d.allTables.length) {
         return callback();

@@ -1,14 +1,14 @@
 import * as fs from "fs";
 import * as path from "path"
-import {DBData, ITable, readTableDefinition} from "sksql";
+import {compileNewRoutines, SKSQL, ITable, readTableDefinition} from "sksql";
 import {Logger} from "../Logger/Logger";
-import {kForeignKeyOnEvent} from "../../../sksql/build/Table/kForeignKeyOnEvent";
+
 
 export async function checkFolders(folder: string) {
     const logPath = path.normalize(folder + "/logs/");
     const dbPath = path.normalize(folder + "/db/");
     const walPath = path.normalize(folder + "/wal/");
-
+    const functionsPath = path.normalize(folder + "/functions/");
     // create main folder
     try {
         fs.mkdirSync(folder)
@@ -30,13 +30,18 @@ export async function checkFolders(folder: string) {
     } catch (err) {
         if (err.code !== 'EEXIST') throw err;
     }
+    try {
+        fs.mkdirSync(functionsPath);
+    } catch (err) {
+        if (err.code !== 'EEXIST') throw err;
+    }
 }
 
 export async function checkData(folder: string) {
     const logPath = path.normalize(folder + "/logs/");
     const dbPath = path.normalize(folder + "/db/");
     const walPath = path.normalize(folder + "/wal/");
-
+    const functionsPath = path.normalize(folder + "/functions/");
 
     const files = fs.readdirSync(dbPath);
     files.forEach(file => {
@@ -62,7 +67,8 @@ export async function checkData(folder: string) {
                     dv.setUint8(i, buffer[i]);
                 }
                 let td = readTableDefinition(tableData.data, true);
-                DBData.instance.allTables.push(tableData);
+                SKSQL.instance.dropTable(td.name);
+                SKSQL.instance.allTables.push(tableData);
                 Logger.instance.write("Found table " + td.name)
                 let blocks = fs.readdirSync(path.normalize(dbPath + "/" + file.replace(".head", "")));
                 let blockIndex = -1;
@@ -90,7 +96,7 @@ export async function checkData(folder: string) {
         }
     });
 
-
+    compileNewRoutines();
 
 
 

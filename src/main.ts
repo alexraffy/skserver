@@ -2,7 +2,7 @@ import {Timer} from "./Timer/Timer";
 import {gracefulShutdown} from "./gracefulShutdown";
 import {Logger} from "./Logger/Logger";
 import {checkData, checkFolders} from "./Data/checkData";
-import {DBData} from "sksql";
+import {SKSQL} from "sksql";
 import fs from "fs";
 import {CSocket} from "./Socket/CSocket";
 
@@ -32,13 +32,13 @@ export async function main() {
     const sklib = "";
     Logger.instance.write("Checking for data...");
 
-    let db = new DBData();
+    let db = new SKSQL();
     db.initWorkerPool(0, sklib);
     let ret = await checkData(databasePath);
 
     let autoShutdown = new Timer();
     autoShutdown.setShutdown(gracefulShutdown);
-    autoShutdown.startTimer(60 * 5);
+    autoShutdown.startTimer(alive);
 
 
     let cs = new CSocket();

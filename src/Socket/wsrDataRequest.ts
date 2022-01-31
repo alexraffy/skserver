@@ -1,13 +1,21 @@
 
 import {CSocket} from "./CSocket";
-import {DBData, readTableDefinition, TAuthSession, TWSRDataRequest, TWSRDataResponse, WSRDataRequest} from "sksql";
+import {
+    SKSQL,
+    readTableDefinition,
+    TAuthSession,
+    TWSRDataRequest,
+    TWSRDataResponse,
+    WSRDataRequest,
+    WSROK
+} from "sksql";
 
 
 
 export function wsrDataRequest(requestEnv: TAuthSession, socket: CSocket, id: number, param: TWSRDataRequest) {
 
-    for (let i = 0; i < DBData.instance.allTables.length;i++) {
-        let t = DBData.instance.allTables[i];
+    for (let i = 0; i < SKSQL.instance.allTables.length;i++) {
+        let t = SKSQL.instance.allTables[i];
         let def = readTableDefinition(t.data, true);
         if (def.name !== "dual") {
             socket.send(id, WSRDataRequest, {
@@ -34,6 +42,6 @@ export function wsrDataRequest(requestEnv: TAuthSession, socket: CSocket, id: nu
             }
         }
     }
-
+    socket.send(id, WSROK, {});
 
 }
