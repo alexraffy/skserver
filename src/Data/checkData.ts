@@ -37,7 +37,7 @@ export async function checkFolders(folder: string) {
     }
 }
 
-export async function checkData(folder: string) {
+export async function checkData(db: SKSQL, folder: string) {
     const logPath = path.normalize(folder + "/logs/");
     const dbPath = path.normalize(folder + "/db/");
     const walPath = path.normalize(folder + "/wal/");
@@ -67,8 +67,8 @@ export async function checkData(folder: string) {
                     dv.setUint8(i, buffer[i]);
                 }
                 let td = readTableDefinition(tableData.data, true);
-                SKSQL.instance.dropTable(td.name);
-                SKSQL.instance.allTables.push(tableData);
+                db.dropTable(td.name);
+                db.allTables.push(tableData);
                 Logger.instance.write("Found table " + td.name)
                 let blocks = fs.readdirSync(path.normalize(dbPath + "/" + file.replace(".head", "")));
                 let blockIndex = -1;
@@ -96,7 +96,7 @@ export async function checkData(folder: string) {
         }
     });
 
-    compileNewRoutines();
+    compileNewRoutines(db);
 
 
 

@@ -34,14 +34,14 @@ export async function main() {
 
     let db = new SKSQL();
     db.initWorkerPool(0, sklib);
-    let ret = await checkData(databasePath);
+    let ret = await checkData(db, databasePath);
 
     let autoShutdown = new Timer();
     autoShutdown.setShutdown(gracefulShutdown);
     autoShutdown.startTimer(alive);
 
 
-    let cs = new CSocket();
+    let cs = new CSocket(db);
     cs.setup(port);
     Logger.instance.write("Socket listening on port " + port);
 

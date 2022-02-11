@@ -12,12 +12,12 @@ import {
 
 
 
-export function wsrDataRequest(requestEnv: TAuthSession, socket: CSocket, id: number, param: TWSRDataRequest) {
+export function wsrDataRequest(db: SKSQL, requestEnv: TAuthSession, socket: CSocket, id: number, param: TWSRDataRequest) {
 
-    for (let i = 0; i < SKSQL.instance.allTables.length;i++) {
-        let t = SKSQL.instance.allTables[i];
+    for (let i = 0; i < db.allTables.length;i++) {
+        let t = db.allTables[i];
         let def = readTableDefinition(t.data, true);
-        if (def.name !== "dual") {
+        if (def.name !== "dual" && !def.name.startsWith("#")) {
             socket.send(id, WSRDataRequest, {
                     id: id,
                     type: "T",

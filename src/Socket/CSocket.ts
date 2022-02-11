@@ -17,23 +17,25 @@ import {
     TWSRSQL,
     TWSRDataRequest,
     WSRDataRequest,
-    WSRSQL,
+    WSRSQL, WSRGNID,
     WSRAuthenticatePlease,
-    TWSRAuthenticatePleaseResponse
+    TWSRAuthenticatePleaseResponse,
+    TWSRGNID, SKSQL
 } from "sksql";
 import {TConnectedUser} from "./TConnectedUser";
+import {wsrGetNextId} from "./wsrGetNextId";
+
 
 export class CSocket {
     private static _instance: CSocket = undefined;
     private clients: TConnectedUser[] = [];
+    private db: SKSQL;
 
-
-    static get instance(): CSocket {
-        if (CSocket._instance === undefined) {
-            CSocket._instance = new CSocket();
-        }
-        return CSocket._instance;
+    constructor(db: SKSQL) {
+        this.db = db;
     }
+
+
 
     broadcast(from: number, message: string, param: any) {
         for (let i = 0; i < this.clients.length; i++) {
@@ -95,8 +97,14 @@ export class CSocket {
             ws.on("message", (data) => {
                 let content = data.toString();
 
-                let payload: TSocketRequest = JSON.parse(content);
-
+                let payload: TSocketRequest;
+                try {
+                    payload = JSON.parse(content);
+                } catch (errorParse) {
+                    Logger.instance.write("Received gibberish: ", content);
+                    return false;
+                }
+                console.log(payload.message);
                 if (payload.message === WSRAuthenticate) {
                     let msg = payload.param as TWSRAuthenticateRequest;
                     let con_id = msg.id;
@@ -112,7 +120,7 @@ export class CSocket {
                             for (let i = 0; i < this.clients.length; i++) {
                                 let cl = this.clients[i];
                                 if (cl.id !== client.id) {
-                                    this.send(cl.id, WSRON, {id: cl.id, name: cl.user.name} as TWSRON)
+                                    this.send(cl.id, WSRON, {id: client.id, name: client.user.name} as TWSRON)
                                 }
                             }
                         }
@@ -130,9 +138,11 @@ export class CSocket {
                 switch (payload.message) {
 ///////////////////////// SQL query received
                     case WSRSQL:
-                        return wsrSQL(requestEnv, this, client.id, (payload.param) as TWSRSQL);
+                        return wsrSQL(this.db, requestEnv, this, client.id, (payload.param) as TWSRSQL);
                     case WSRDataRequest:
-                        return wsrDataRequest(requestEnv, this, client.id, (payload.param) as TWSRDataRequest);
+                        return wsrDataRequest(this.db, requestEnv, this, client.id, (payload.param) as TWSRDataRequest);
+                    case WSRGNID:
+                        return wsrGetNextId(this.db, requestEnv, this, client.id, (payload.param) as TWSRGNID);
 ///////////////////////// UNKNOWN MESSAGES
                     default: {
                         Logger.instance.write("Unknown message " + payload.message);
