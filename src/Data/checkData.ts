@@ -95,7 +95,7 @@ export async function checkData(db: SKSQL, folder: string) {
             }
         }
     });
-
+    db.tableInfo.syncAll();
     compileNewRoutines(db);
 
 
