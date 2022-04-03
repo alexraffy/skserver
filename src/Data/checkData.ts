@@ -91,7 +91,9 @@ export async function checkData(db: SKSQL, folder: string) {
                         fileExists = false;
                     }
                 }
-                genStatsForTable(db, td.name.toUpperCase());
+                if (!["DUAL", "ROUTINES", "SYS_TABLE_STATISTICS"].includes(td.name.toUpperCase())) {
+                    genStatsForTable(db, td.name.toUpperCase());
+                }
             }
         }
     });
