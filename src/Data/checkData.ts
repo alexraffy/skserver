@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path"
-import {compileNewRoutines, SKSQL, ITable, readTableDefinition} from "sksql";
+import {compileNewRoutines, SKSQL, ITable, readTableDefinition, genStatsForTable} from "sksql";
 import {Logger} from "../Logger/Logger";
 
 
@@ -91,10 +91,11 @@ export async function checkData(db: SKSQL, folder: string) {
                         fileExists = false;
                     }
                 }
-
+                genStatsForTable(db, td.name.toUpperCase());
             }
         }
     });
+
     db.tableInfo.syncAll();
     compileNewRoutines(db);
 

@@ -1,6 +1,6 @@
 {
   "name": "skserver",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "Server for sksql",
   "author": {
     "name": "ARaffy"
@@ -21,7 +21,7 @@
     "cross-env": "^7.0.3"
   },
   "dependencies": {
-    "sksql": "1.1.4",
+    "sksql": "1.1.5",
     "ws": "^8.3.0"
   }
 }
