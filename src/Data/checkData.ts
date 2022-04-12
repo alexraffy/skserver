@@ -67,7 +67,9 @@ export async function checkData(db: SKSQL, folder: string) {
                     dv.setUint8(i, buffer[i]);
                 }
                 let td = readTableDefinition(tableData.data, true);
-                db.dropTable(td.name);
+                if (db.getTable(td.name) !== undefined) {
+                    db.dropTable(td.name);
+                }
                 db.allTables.push(tableData);
                 Logger.instance.write("Found table " + td.name)
                 let blocks = fs.readdirSync(path.normalize(dbPath + "/" + file.replace(".head", "")));
@@ -91,9 +93,9 @@ export async function checkData(db: SKSQL, folder: string) {
                         fileExists = false;
                     }
                 }
-                if (!["DUAL", "ROUTINES", "SYS_TABLE_STATISTICS"].includes(td.name.toUpperCase())) {
-                    genStatsForTable(db, td.name.toUpperCase());
-                }
+                //if (!["DUAL", "ROUTINES", "SYS_TABLE_STATISTICS"].includes(td.name.toUpperCase())) {
+                 //   genStatsForTable(db, td.name.toUpperCase());
+               // }
             }
         }
     });
