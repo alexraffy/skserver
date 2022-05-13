@@ -8,7 +8,7 @@ export async function checkFolders(folder: string) {
     const logPath = path.normalize(folder + "/logs/");
     const dbPath = path.normalize(folder + "/db/");
     const walPath = path.normalize(folder + "/wal/");
-    const functionsPath = path.normalize(folder + "/functions/");
+    const backupsPath = path.normalize(folder + "/backups/");
     // create main folder
     try {
         fs.mkdirSync(folder)
@@ -31,7 +31,7 @@ export async function checkFolders(folder: string) {
         if (err.code !== 'EEXIST') throw err;
     }
     try {
-        fs.mkdirSync(functionsPath);
+        fs.mkdirSync(backupsPath);
     } catch (err) {
         if (err.code !== 'EEXIST') throw err;
     }
@@ -40,8 +40,9 @@ export async function checkFolders(folder: string) {
 export async function checkData(db: SKSQL, folder: string) {
     const logPath = path.normalize(folder + "/logs/");
     const dbPath = path.normalize(folder + "/db/");
+    const backupsPath = path.normalize(folder + "/backups/");
     const walPath = path.normalize(folder + "/wal/");
-    const functionsPath = path.normalize(folder + "/functions/");
+
 
     const files = fs.readdirSync(dbPath);
     files.forEach(file => {

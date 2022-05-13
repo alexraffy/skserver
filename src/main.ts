@@ -5,6 +5,7 @@ import {checkData, checkFolders} from "./Data/checkData";
 import {SKSQL} from "sksql";
 import fs from "fs";
 import {CSocket} from "./Socket/CSocket";
+import {backup} from "./Backup/backup";
 
 const {
     performance,
@@ -35,15 +36,20 @@ export async function main() {
     let db = new SKSQL();
     db.initWorkerPool(0, sklib);
     let ret = await checkData(db, databasePath);
+    backup(databasePath, db, (db, backupName, success) => {
 
-    let autoShutdown = new Timer();
-    autoShutdown.setShutdown(gracefulShutdown);
-    autoShutdown.startTimer(alive);
+        let autoShutdown = new Timer();
+        autoShutdown.setShutdown(gracefulShutdown);
+        autoShutdown.startTimer(alive);
 
 
-    let cs = new CSocket(db);
-    cs.setup(port);
-    Logger.instance.write("Socket listening on port " + port);
+        let cs = new CSocket(db);
+        cs.setup(port);
+        Logger.instance.write("Socket listening on port " + port);
+
+    });
+
+
 
 
 }
