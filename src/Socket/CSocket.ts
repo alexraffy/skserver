@@ -24,6 +24,7 @@ import {
 } from "sksql";
 import {TConnectedUser} from "./TConnectedUser";
 import {wsrGetNextId} from "./wsrGetNextId";
+import {getServerState} from "../main";
 
 
 export class CSocket {
@@ -69,13 +70,20 @@ export class CSocket {
         }
     }
 
-
+    closeAll() {
+        for (let i = 0; i < this.clients.length; i++) {
+            (this.clients[i].connection as WebSocket).close();
+        }
+    }
     setup(port: number) {
         var wsServer = new ws.Server({
             port: port,
             perMessageDeflate:false
         });
         wsServer.on("connection", (ws,request) => {
+            if (getServerState().shutdownRequested === true) {
+                return ws.close();
+            }
 
             Logger.instance.write((new Date()) + ' Connection');
             let headersKeys = request.headers;
@@ -95,8 +103,10 @@ export class CSocket {
                 console.log("Connection opened.");
             });
             ws.on("message", (data) => {
+                if (getServerState().shutdownRequested === true) {
+                    return false;
+                }
                 let content = data.toString();
-
                 let payload: TSocketRequest;
                 try {
                     payload = JSON.parse(content);

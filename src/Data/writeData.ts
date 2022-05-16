@@ -1,9 +1,10 @@
 import {SKSQL, ITable, readTableDefinition, kBlockHeaderField} from "sksql";
 import * as fs from "fs";
 import * as path from "path"
+import {taskDone, taskStarted} from "../gracefulShutdown";
 
 export function writeData(dbFolder: string, d: SKSQL, callback) {
-
+    taskStarted();
     let currentTableIndex = -1;
     processNextTable(dbFolder, d, currentTableIndex, callback);
 }
@@ -11,6 +12,7 @@ export function writeData(dbFolder: string, d: SKSQL, callback) {
 function processNextTable(dbFolder: string, d: SKSQL, currentTableIndex: number, callback) {
     currentTableIndex++;
     if (currentTableIndex === d.allTables.length) {
+        taskDone();
         return callback();
     }
     let currentTable = d.allTables[currentTableIndex];
