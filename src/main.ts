@@ -75,7 +75,12 @@ export async function main() {
 
         if (alive !== 0 ) {
             let autoShutdown = new Timer();
-            autoShutdown.setShutdown(gracefulShutdown);
+            autoShutdown.setShutdown(() => {
+                if (Logger.instance) {
+                    Logger.instance.write("Shutting down for inactivity...");
+                }
+                gracefulShutdown(0);
+            });
             autoShutdown.startTimer(alive);
             ServerState.shutdownTimer = autoShutdown;
         }

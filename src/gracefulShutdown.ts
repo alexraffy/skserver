@@ -5,7 +5,7 @@ import {clearPID} from "./Backup/clearPID";
 
 process.on('SIGTERM', () => {
     if (Logger.instance) {
-        Logger.instance.write("Shutdown requested");
+        Logger.instance.write("Shutdown requested by user.");
     }
 
     gracefulShutdown(0);
