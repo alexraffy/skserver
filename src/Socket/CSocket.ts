@@ -40,7 +40,7 @@ export class CSocket {
 
     broadcast(from: number, message: string, param: any) {
         for (let i = 0; i < this.clients.length; i++) {
-            if (this.clients[i].id !== from) {
+            if (this.clients[i].id !== from && this.clients[i].remoteMode !== true) {
                 this.clients[i].out_msg_id++;
                 let payload: TSocketResponse = {
                     id: from,
@@ -150,7 +150,7 @@ export class CSocket {
                 switch (payload.message) {
 ///////////////////////// SQL query received
                     case WSRSQL:
-                        return wsrSQL(this.db, requestEnv, this, client.id, (payload.param) as TWSRSQL);
+                        return wsrSQL(this.db, requestEnv, this, client.id, (payload.param) as TWSRSQL, client.remoteMode);
                     case WSRDataRequest:
                         return wsrDataRequest(this.db, requestEnv, this, client.id, (payload.param) as TWSRDataRequest, client.remoteMode);
                     case WSRGNID:

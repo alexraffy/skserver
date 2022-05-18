@@ -6,7 +6,7 @@ import * as path from "path";
 import {dropTable} from "../Data/dropTable";
 
 
-export function wsrSQL(db: SKSQL, requestEnv: TAuthSession, socket: CSocket, id: number, param: TWSRSQL) {
+export function wsrSQL(db: SKSQL, requestEnv: TAuthSession, socket: CSocket, id: number, param: TWSRSQL, remoteMode: boolean) {
     const databasePath = process.env.SKDB_PATH;
     const dbPath = path.normalize(databasePath + "/db/");
     // write to log
