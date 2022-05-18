@@ -7,4 +7,5 @@ export interface TConnectedUser {
     connection: any;
     out_msg_id: number;
     in_msg_id: number;
+    remoteMode: boolean;
 }

@@ -12,7 +12,7 @@ import {
 
 
 
-export function wsrDataRequest(db: SKSQL, requestEnv: TAuthSession, socket: CSocket, id: number, param: TWSRDataRequest) {
+export function wsrDataRequest(db: SKSQL, requestEnv: TAuthSession, socket: CSocket, id: number, param: TWSRDataRequest, remoteMode: boolean) {
 
     for (let i = 0; i < db.allTables.length;i++) {
         let t = db.allTables[i];
@@ -29,18 +29,20 @@ export function wsrDataRequest(db: SKSQL, requestEnv: TAuthSession, socket: CSoc
                     data: new Uint8Array(compressedData)
                 } as TWSRDataResponse
             );
-            for (let x = 0; x < t.data.blocks.length; x++) {
-                let compressedBlock = compressAB(t.data.blocks[x]);
-                socket.send(id, WSRDataRequest, {
-                        id: id,
-                        type: "B",
-                        tableName: def.name,
-                        indexTable: i,
-                        indexBlock: x,
-                        size: compressedBlock.byteLength,
-                        data: new Uint8Array(compressedBlock)
-                    } as TWSRDataResponse
-                );
+            if (remoteMode !== true) {
+                for (let x = 0; x < t.data.blocks.length; x++) {
+                    let compressedBlock = compressAB(t.data.blocks[x]);
+                    socket.send(id, WSRDataRequest, {
+                            id: id,
+                            type: "B",
+                            tableName: def.name,
+                            indexTable: i,
+                            indexBlock: x,
+                            size: compressedBlock.byteLength,
+                            data: new Uint8Array(compressedBlock)
+                        } as TWSRDataResponse
+                    );
+                }
             }
         }
     }

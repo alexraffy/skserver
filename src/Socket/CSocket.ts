@@ -96,7 +96,8 @@ export class CSocket {
                 user: undefined,
                 out_msg_id: 0,
                 in_msg_id: 0,
-                connection: ws
+                connection: ws,
+                remoteMode: false
             });
 
             ws.on("open", () => {
@@ -124,6 +125,7 @@ export class CSocket {
                             return c.id === con_id;
                         });
                         if (client !== undefined) {
+                            client.remoteMode = msg.remoteMode;
                             client.user = info;
                             this.send(con_id, WSRAuthenticate, { con_id: con_id } as TWSRAuthenticateResponse);
                             // broadcast new user
@@ -150,7 +152,7 @@ export class CSocket {
                     case WSRSQL:
                         return wsrSQL(this.db, requestEnv, this, client.id, (payload.param) as TWSRSQL);
                     case WSRDataRequest:
-                        return wsrDataRequest(this.db, requestEnv, this, client.id, (payload.param) as TWSRDataRequest);
+                        return wsrDataRequest(this.db, requestEnv, this, client.id, (payload.param) as TWSRDataRequest, client.remoteMode);
                     case WSRGNID:
                         return wsrGetNextId(this.db, requestEnv, this, client.id, (payload.param) as TWSRGNID);
 ///////////////////////// UNKNOWN MESSAGES
