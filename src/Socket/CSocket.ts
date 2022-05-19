@@ -146,7 +146,7 @@ export class CSocket {
                     return false;
                 }
                 let requestEnv = client.user;
-                Timer.instance.ping();
+                getServerState().shutdownTimer.ping();
                 switch (payload.message) {
 ///////////////////////// SQL query received
                     case WSRSQL:

@@ -1,14 +1,17 @@
 import {SKSQL} from "sksql";
-import * as fs from "fs";
-import * as path from "path"
+import * as path from "path";
+import fs from "fs";
 import {Logger} from "../Logger/Logger";
 
-export function dropTable(dbFolder: string, d: SKSQL, tableName: string) {
+
+export function callbackDropTable(db: SKSQL, tableName: string) {
+    const databasePath = process.env.SKDB_PATH;
+    const dbPath = path.normalize(databasePath + "/db/");
     if (tableName.startsWith('#') || tableName === "dual") {
         return;
     }
-    const headerFilename = path.normalize(dbFolder + "/" + tableName + ".head");
-    const blocksFolder = path.normalize(dbFolder + "/" + tableName + "/");
+    const headerFilename = path.normalize(dbPath + "/" + tableName + ".head");
+    const blocksFolder = path.normalize(dbPath + "/" + tableName + "/");
     try {
         fs.rmSync(headerFilename, {force: true});
         fs.rmdirSync(blocksFolder, {recursive: true});

@@ -8,6 +8,8 @@ import {CSocket} from "./Socket/CSocket";
 import {backup} from "./Backup/backup";
 import {checkPreviousShutdown} from "./Backup/checkPreviousShutdown";
 import {writePID} from "./Backup/writePID";
+import {callbackDropTable} from "./Data/callbackDropTable";
+import {updateWorkerStatus} from "./updateWorkerStatus";
 
 const {
     performance,
@@ -24,6 +26,7 @@ export interface TServerState {
     alive: number;
     shutdownRequested: boolean;
     shutdownTimer: Timer;
+    heartBeatTimer: Timer;
     socket: CSocket;
     taskCounter: number;
 }
@@ -58,6 +61,7 @@ export async function main() {
         alive: alive,
         shutdownRequested: false,
         shutdownTimer: undefined,
+        heartBeatTimer: undefined,
         socket: undefined,
         taskCounter: 0
     }
@@ -67,6 +71,7 @@ export async function main() {
 
     let db = new SKSQL();
     db.initWorkerPool(0, sklib);
+    db.callbackDropTable = callbackDropTable;
     ServerState.db = db;
     checkPreviousShutdown(db);
 
@@ -83,6 +88,16 @@ export async function main() {
             });
             autoShutdown.startTimer(alive);
             ServerState.shutdownTimer = autoShutdown;
+
+            if (process.env.SKWORKER_HEARTBEAT !== undefined) {
+                let heartBeat = new Timer();
+                heartBeat.setShutdown(() => {
+                    updateWorkerStatus(parseInt(workerId), "RUNNING");
+                });
+                heartBeat.startTimer(60);
+                ServerState.heartBeatTimer = heartBeat;
+            }
+
         }
 
         let cs = new CSocket(db);
@@ -90,6 +105,9 @@ export async function main() {
         cs.setup(port);
         Logger.instance.write("Socket listening on port " + port);
         writePID();
+        if (process.env.SKWORKER_HEARTBEAT !== undefined) {
+            updateWorkerStatus(parseInt(workerId), "RUNNING");
+        }
 
     });
 

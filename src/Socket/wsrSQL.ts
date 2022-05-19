@@ -3,7 +3,6 @@ import {Logger} from "../Logger/Logger";
 import {SKSQL, SQLResult, SQLStatement, TAuthSession, TWSRSQL, WSRSQL} from "sksql";
 import {writeData} from "../Data/writeData";
 import * as path from "path";
-import {dropTable} from "../Data/dropTable";
 
 
 export function wsrSQL(db: SKSQL, requestEnv: TAuthSession, socket: CSocket, id: number, param: TWSRSQL, remoteMode: boolean) {
@@ -25,10 +24,7 @@ export function wsrSQL(db: SKSQL, requestEnv: TAuthSession, socket: CSocket, id:
         if (ret.error !== undefined) {
             console.log(ret.error);
         }
-        if (ret.dropTable !== undefined && ret.dropTable.length > 0)
-        for (let i = 0; i < ret.dropTable.length; i++) {
-            dropTable(dbPath, db, ret.dropTable[i]);
-        }
+
         res.close();
         console.log(ret);
     } catch (e) {
