@@ -107,6 +107,10 @@ export class CSocket {
                 if (getServerState().shutdownRequested === true) {
                     return false;
                 }
+                if (getServerState().shutdownTimer !== undefined) {
+                    getServerState().shutdownTimer.ping();
+                }
+
                 let content = data.toString();
                 let payload: TSocketRequest;
                 try {
@@ -146,7 +150,7 @@ export class CSocket {
                     return false;
                 }
                 let requestEnv = client.user;
-                getServerState().shutdownTimer.ping();
+
                 switch (payload.message) {
 ///////////////////////// SQL query received
                     case WSRSQL:
