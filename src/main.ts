@@ -45,7 +45,7 @@ export async function main() {
     const port = parseInt(sport);
     const alive = parseInt(sAlive);
     await checkFolders(databasePath);
-    let _ = new Logger(databasePath, workerId);
+    let _ = new Logger(databasePath, new Date().toISOString() + "_" + workerId);
     Logger.instance.write("SKServer v" + VERSION);
     Logger.instance.write("WorkerId: " + workerId);
     Logger.instance.write("Port: " + port);
