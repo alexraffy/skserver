@@ -27,7 +27,7 @@ export class Logger {
     }
 
     write(...theArgs: string[]) {
-        let message = theArgs.reduce((previous, current) => {
+        let message = new Date().toISOString() + "\t" + theArgs.reduce((previous, current) => {
             return previous + current;
         })
         this.stream.write(message + "\r\n");

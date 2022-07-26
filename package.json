@@ -12,7 +12,8 @@
     "00-skserver-runAll": "npm run 02-skserver-build",
     "02-skserver-build": "tsc",
     "03-skserver-run-queue": "cross-env SKDB_PATH=C:\\SKSQL_DBS\\Catalog\\queue\\ SKWORKER_ID=5 SKWORKER_ALIVE=360000 SKWORKER_PORT=30001 node build/main.js",
-    "04-skserver-run-accounts": "cross-env SKDB_PATH=C:\\SKSQL_DBS\\Catalog\\accounts\\ SKWORKER_ID=6 SKWORKER_ALIVE=360000 SKWORKER_PORT=30000 node build/main.js"
+    "04-skserver-run-accounts": "cross-env SKDB_PATH=C:\\SKSQL_DBS\\Catalog\\accounts\\ SKWORKER_ID=6 SKWORKER_ALIVE=360000 SKWORKER_PORT=30000 node build/main.js",
+    "03-skserver-run-main": "cross-env SKWORKER_7Z=C:\\Users\\alex\\Downloads\\7z2200-extra\\x64\\7za.exe SKDB_PATH=C:\\SKSQL_DBS\\Catalog\\main\\ SKWORKER_ENCRYPTION=\"kYp2s5v8y/B?E(H+MbQeThWmZq4t7w9z\" SKWORKER_ID=5 SKWORKER_ALIVE=360000 SKWORKER_PORT=30001 node build/main.js"
   },
   "license": "SSPL",
   "devDependencies": {
@@ -22,7 +23,7 @@
     "typescript": "^4.6.3"
   },
   "dependencies": {
-    "sksql": "1.1.27",
+    "sksql": "1.1.32",
     "ws": "^8.3.0"
   }
 }

@@ -84,13 +84,17 @@ export class CSocket {
             if (getServerState().shutdownRequested === true) {
                 return ws.close();
             }
+            let clientConnectionString = request.socket.remoteAddress  + ":" + request.socket.remotePort;
+            Logger.instance.write(clientConnectionString + "\t" + 'Connection in progress');
 
-            Logger.instance.write((new Date()) + ' Connection');
+            /*
             let headersKeys = request.headers;
             for (let key in headersKeys) {
                 //@ts-ignore
                 Logger.instance.write(key, ": ", request.headers[key]);
             }
+
+             */
             let index = this.clients.push({
                 id: this.clients.length + 1,
                 user: undefined,
@@ -116,10 +120,10 @@ export class CSocket {
                 try {
                     payload = JSON.parse(content);
                 } catch (errorParse) {
-                    Logger.instance.write("Received gibberish: ", content);
+                    Logger.instance.write(clientConnectionString + "\t" + "Received gibberish: ", content);
                     return false;
                 }
-                console.log(payload.message);
+                //console.log(payload.message);
                 if (payload.message === WSRAuthenticate) {
                     let msg = payload.param as TWSRAuthenticateRequest;
                     let con_id = msg.id;
@@ -129,9 +133,10 @@ export class CSocket {
                             return c.id === con_id;
                         });
                         if (client !== undefined) {
-                            client.remoteMode = msg.remoteMode;
+                            client.remoteMode = msg.commandMode;
                             client.user = info;
                             this.send(con_id, WSRAuthenticate, { con_id: con_id } as TWSRAuthenticateResponse);
+                            Logger.instance.write(clientConnectionString + "\t" + 'Connection accepted');
                             // broadcast new user
                             for (let i = 0; i < this.clients.length; i++) {
                                 let cl = this.clients[i];
@@ -154,15 +159,15 @@ export class CSocket {
                 switch (payload.message) {
 ///////////////////////// SQL query received
                     case WSRSQL:
-                        return wsrSQL(this.db, requestEnv, this, client.id, (payload.param) as TWSRSQL, client.remoteMode);
+                        return wsrSQL(this.db, requestEnv, this, client.id, (payload.param) as TWSRSQL, client.remoteMode, clientConnectionString);
                     case WSRDataRequest:
-                        return wsrDataRequest(this.db, requestEnv, this, client.id, (payload.param) as TWSRDataRequest, client.remoteMode);
+                        return wsrDataRequest(this.db, requestEnv, this, client.id, (payload.param) as TWSRDataRequest, client.remoteMode, clientConnectionString);
                     case WSRGNID:
-                        return wsrGetNextId(this.db, requestEnv, this, client.id, (payload.param) as TWSRGNID);
+                        return wsrGetNextId(this.db, requestEnv, this, client.id, (payload.param) as TWSRGNID, clientConnectionString);
 ///////////////////////// UNKNOWN MESSAGES
                     default: {
-                        Logger.instance.write("Unknown message " + payload.message);
-                        Logger.instance.write("Payload was " + JSON.stringify(payload));
+                        Logger.instance.write(clientConnectionString + "\t" + "Unknown message " + payload.message);
+                        Logger.instance.write(clientConnectionString + "\t" + "Payload was " + JSON.stringify(payload));
                         break;
                     }
                 }

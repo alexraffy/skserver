@@ -85,4 +85,5 @@ typings/
 /tests/package-lock.json
 /tests/build/
 /tests/node_modules/
+/tests/db
 *.tgz

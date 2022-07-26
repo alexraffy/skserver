@@ -1,18 +1,18 @@
-
 import {CSocket} from "./CSocket";
 import {
-    SKSQL,
+    compressAB,
+    kModifiedBlockType,
     readTableDefinition,
+    SKSQL,
     TAuthSession,
     TWSRDataRequest,
     TWSRDataResponse,
     WSRDataRequest,
-    WSROK, compressAB
+    WSROK
 } from "sksql";
 
 
-
-export function wsrDataRequest(db: SKSQL, requestEnv: TAuthSession, socket: CSocket, id: number, param: TWSRDataRequest, remoteMode: boolean) {
+export function wsrDataRequest(db: SKSQL, requestEnv: TAuthSession, socket: CSocket, id: number, param: TWSRDataRequest, remoteMode: boolean, clientConnectionString: string) {
 
     for (let i = 0; i < db.allTables.length;i++) {
         let t = db.allTables[i];
@@ -21,7 +21,7 @@ export function wsrDataRequest(db: SKSQL, requestEnv: TAuthSession, socket: CSoc
             let compressedData = compressAB(t.data.tableDef);
             socket.send(id, WSRDataRequest, {
                     id: id,
-                    type: "T",
+                    type: kModifiedBlockType.tableHeader,
                     tableName: def.name,
                     indexTable: i,
                     indexBlock: -1,
@@ -34,7 +34,7 @@ export function wsrDataRequest(db: SKSQL, requestEnv: TAuthSession, socket: CSoc
                     let compressedBlock = compressAB(t.data.blocks[x]);
                     socket.send(id, WSRDataRequest, {
                             id: id,
-                            type: "B",
+                            type: kModifiedBlockType.tableBlock,
                             tableName: def.name,
                             indexTable: i,
                             indexBlock: x,

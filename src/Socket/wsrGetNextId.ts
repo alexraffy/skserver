@@ -13,7 +13,7 @@ import {writeData} from "../Data/writeData";
 
 
 
-export function wsrGetNextId(db: SKSQL, requestEnv: TAuthSession, socket: CSocket, id: number, param: TWSRGNID) {
+export function wsrGetNextId(db: SKSQL, requestEnv: TAuthSession, socket: CSocket, id: number, param: TWSRGNID, clientConnectionString: string) {
     const databasePath = process.env.SKDB_PATH;
     const dbPath = path.normalize(databasePath + "/db/");
 

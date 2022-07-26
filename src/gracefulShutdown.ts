@@ -4,26 +4,23 @@ import {clearPID} from "./Backup/clearPID";
 import {updateWorkerStatus} from "./updateWorkerStatus";
 
 
-process.on('SIGTERM', () => {
-    if (Logger.instance) {
-        Logger.instance.write("Shutdown requested by user.");
-    }
-    gracefulShutdown(0);
-});
 
 
 export function taskStarted() {
+
     getServerState().taskCounter++;
+    //Logger.instance.write("taskStarted " + getServerState().taskCounter);
 }
 
 export function taskDone() {
     getServerState().taskCounter--;
+    //Logger.instance.write("taskDone " + getServerState().taskCounter);
 }
 
 
 export function gracefulShutdown(code: number) {
     if (Logger.instance) {
-        Logger.instance.write("Shutdown requested...");
+        Logger.instance.write("Shutting down in progress...");
     }
     getServerState().shutdownRequested = true;
 
@@ -34,14 +31,15 @@ export function gracefulShutdown(code: number) {
         getServerState().shutdownTimer.stop();
     }
 
-    taskDone();
     let timeoutFunction = () => {
         if (getServerState().taskCounter <= 0) {
             if (Logger.instance) {
                 Logger.instance.write("Shutting down with code ", String(code));
                 Logger.instance.close();
             }
-            getServerState().socket.closeAll();
+            if (getServerState().socket !== undefined) {
+                getServerState().socket.closeAll();
+            }
             clearPID();
             if (process.env.SKWORKER_HEARTBEAT !== undefined) {
                 updateWorkerStatus(parseInt(getServerState().workerId), "DOWN").then((v) => {

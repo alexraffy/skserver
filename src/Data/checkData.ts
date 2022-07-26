@@ -1,7 +1,19 @@
 import * as fs from "fs";
 import * as path from "path"
-import {compileNewRoutines, SKSQL, ITable, readTableDefinition, genStatsForTable} from "sksql";
+import {
+    compileNewRoutines,
+    SKSQL,
+    ITable,
+    readTableDefinition,
+    genStatsForTable,
+    isValidTableHeader,
+    decompress
+} from "sksql";
 import {Logger} from "../Logger/Logger";
+import {getServerState} from "../main";
+import {gracefulShutdown} from "../gracefulShutdown";
+import * as crypto from "crypto";
+import {decrypt} from "./decrypt";
 
 
 export async function checkFolders(folder: string) {
@@ -45,7 +57,8 @@ export async function checkData(db: SKSQL, folder: string) {
 
 
     const files = fs.readdirSync(dbPath);
-    files.forEach(file => {
+    for (let i = 0; i < files.length; i++) {
+        let file = files[i];
         let filePath = path.normalize(dbPath + "/" + file);
         Logger.instance.write("Processing file " + filePath);
         const stat = fs.statSync(filePath);
@@ -67,6 +80,23 @@ export async function checkData(db: SKSQL, folder: string) {
                 for (let i = 0; i < buffer.byteLength; i++) {
                     dv.setUint8(i, buffer[i]);
                 }
+
+                // is it encrypted?
+                if (!isValidTableHeader(dv)) {
+                    if (getServerState().encryptionKey === undefined) {
+                        Logger.instance.write("Database is encrypted and no key was provided.")
+                        gracefulShutdown(0);
+                        return false;
+                    }
+
+                    tableData.data.tableDef = decrypt(tableData.data.tableDef, true);
+
+                } else if (getServerState().encryptionKey !== undefined && getServerState().encryptionKey !== "") {
+                    Logger.instance.write("Database is NOT encrypted and a key was provided.")
+                    gracefulShutdown(0);
+                    return false;
+                }
+
                 let td = readTableDefinition(tableData.data, true);
                 if (db.getTable(td.name) !== undefined) {
                     db.dropTable(td.name);
@@ -88,7 +118,12 @@ export async function checkData(db: SKSQL, folder: string) {
                         for (let i = 0; i < buf.byteLength; i++) {
                             dvBlock.setUint8(i, buf[i]);
                         }
-                        tableData.data.blocks.push(abuf);
+                        if (getServerState().encryptionKey !== undefined) {
+                            let decrypted = decrypt(abuf, true);
+                            tableData.data.blocks.push(decrypted);
+                        } else {
+                            tableData.data.blocks.push(abuf);
+                        }
                         fileExists = true;
                     } catch (err) {
                         fileExists = false;
@@ -99,7 +134,7 @@ export async function checkData(db: SKSQL, folder: string) {
                // }
             }
         }
-    });
+    }
 
     db.tableInfo.syncAll();
     compileNewRoutines(db);

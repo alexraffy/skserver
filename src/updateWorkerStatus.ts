@@ -6,7 +6,7 @@ import {SKSQL, SQLStatement, TAuthSession, TDBEventsDelegate} from "sksql";
 export function updateWorkerStatus(worker_id: number, status: "SPAWN" | "RUNNING" | "DOWN"): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
         let db2 = new SKSQL();
-        db2.remoteModeOnly = true;
+        db2.commandModeOnly = true;
 
         let delegate: TDBEventsDelegate = {
             on(db: SKSQL, databaseHashId: string, message: string, payload: any) {
