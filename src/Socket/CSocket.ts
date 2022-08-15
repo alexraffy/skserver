@@ -20,11 +20,12 @@ import {
     WSRSQL, WSRGNID,
     WSRAuthenticatePlease,
     TWSRAuthenticatePleaseResponse,
-    TWSRGNID, SKSQL
+    TWSRGNID, SKSQL, TDateTimeCmp, TDateTime, generateV4UUID
 } from "sksql";
 import {TConnectedUser} from "./TConnectedUser";
 import {wsrGetNextId} from "./wsrGetNextId";
 import {getServerState} from "../main";
+import {date_getutcdate} from "sksql/build/Functions/Date/date_getutcdate";
 
 
 export class CSocket {
@@ -38,7 +39,8 @@ export class CSocket {
 
 
 
-    broadcast(from: number, message: string, param: any) {
+    broadcast(from: string, message: string, param: any) {
+        Logger.instance.write("Broadcasting " + message + " to " + this.clients.length + " ")
         for (let i = 0; i < this.clients.length; i++) {
             if (this.clients[i].id !== from && this.clients[i].remoteMode !== true) {
                 this.clients[i].out_msg_id++;
@@ -49,12 +51,13 @@ export class CSocket {
                     message: message,
                     param: param
                 };
+                Logger.instance.write("broadcasting " + message + " to " + this.clients[i].user.name);
                 (this.clients[i].connection as WebSocket).send(JSON.stringify(payload));
             }
         }
     }
 
-    send(id: number, message: string, param: any) {
+    send(id: string, message: string, param: any) {
         for (let i = 0; i < this.clients.length; i += 1) {
             if (this.clients[i].id === id) {
                 let payload: TSocketResponse = {
@@ -95,17 +98,27 @@ export class CSocket {
             }
 
              */
-            let index = this.clients.push({
-                id: this.clients.length + 1,
+            let id = generateV4UUID();
+            this.clients.push({
+                id: id,
                 user: undefined,
                 out_msg_id: 0,
                 in_msg_id: 0,
                 connection: ws,
-                remoteMode: false
+                remoteMode: false,
+                token: "",
+                rights: "N",
+                expiry: undefined
             });
 
             ws.on("open", () => {
                 console.log("Connection opened.");
+            });
+            ws.on("close", () => {
+                let idx = this.clients.findIndex((v) => { return v.id === id;});
+                if (idx > -1) {
+                    this.clients.splice(idx, 1);
+                }
             });
             ws.on("message", (data) => {
                 if (getServerState().shutdownRequested === true) {
@@ -133,23 +146,69 @@ export class CSocket {
                             return c.id === con_id;
                         });
                         if (client !== undefined) {
-                            client.remoteMode = msg.commandMode;
-                            client.user = info;
-                            this.send(con_id, WSRAuthenticate, { con_id: con_id } as TWSRAuthenticateResponse);
-                            Logger.instance.write(clientConnectionString + "\t" + 'Connection accepted');
-                            // broadcast new user
-                            for (let i = 0; i < this.clients.length; i++) {
-                                let cl = this.clients[i];
-                                if (cl.id !== client.id) {
-                                    this.send(cl.id, WSRON, {id: client.id, name: client.user.name} as TWSRON)
+                            client.remoteMode = msg.info.remoteOnly === true;
+                            client.user = JSON.parse(JSON.stringify(info));
+                            // is a token necessary?
+                            if (getServerState().privateDB === true) {
+                                const t = (client.user.token === undefined) ? "" : client.user.token.toUpperCase();
+                                Logger.instance.write("Authenticating with token [" + t  + "]");
+                                client.user.valid = false;
+                                const tokens = getServerState().tokenList;
+                                Logger.instance.write("Token List: " + tokens.length);
+                                for (let i = 0; i < tokens.length; i++) {
+                                    if (tokens[i].token.toUpperCase() === t) {
+                                        // check the expiry
+                                        let now = date_getutcdate(undefined) as TDateTime;
+                                        if (TDateTimeCmp(now, tokens[i].expiry) === -1) {
+                                            client.user.valid = true;
+                                            Logger.instance.write("Token OK.");
+                                            client.rights = tokens[i].rights as "RW" | "R" | "W" | "N";
+                                            client.user.accessRights = tokens[i].rights;
+                                            client.token = tokens[i].token;
+                                            client.expiry = tokens[i].expiry;
+                                        } else {
+                                            Logger.instance.write("Token expired.");
+                                        }
+                                        break;
+                                    }
                                 }
+
+                            } else {
+                                client.user.valid = true;
                             }
+
+                            if (getServerState().remoteOnly === true) {
+                                client.user.remoteOnly = true;
+                            }
+                            if (getServerState().readOnly === true) {
+                                client.user.readOnly = true;
+                            }
+                            this.send(con_id, WSRAuthenticate, { con_id: con_id, info: client.user } as TWSRAuthenticateResponse);
+                            if (client.user.valid === true) {
+                                Logger.instance.write(clientConnectionString + "\t" + 'Connection accepted');
+                                // broadcast new user
+                                for (let i = 0; i < this.clients.length; i++) {
+                                    let cl = this.clients[i];
+                                    if (cl.id !== client.id) {
+                                        this.send(cl.id, WSRON, {id: client.id, name: client.user.name} as TWSRON)
+                                    }
+                                }
+                            } else {
+                                Logger.instance.write(clientConnectionString + "\t" + "Connection denied");
+                                (client.connection as WebSocket).close(1000);
+                                let idx = this.clients.findIndex((v) => { return v.id === id;});
+                                if (idx > -1) {
+                                    this.clients.splice(idx, 1);
+                                }
+
+                            }
+
                         }
                     }
                     return false;
                 }
                 let client = this.clients.find((c) => {
-                    return c.id === index;
+                    return c.id === id;
                 });
                 if (client === undefined) {
                     return false;
@@ -172,7 +231,7 @@ export class CSocket {
                     }
                 }
             });
-            this.send(index, WSRAuthenticatePlease, { id: index } as TWSRAuthenticatePleaseResponse)
+            this.send(id, WSRAuthenticatePlease, { id: id } as TWSRAuthenticatePleaseResponse)
         });
 
 

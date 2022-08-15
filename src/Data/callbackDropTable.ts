@@ -2,11 +2,12 @@ import {SKSQL} from "sksql";
 import * as path from "path";
 import * as fs from "fs";
 import {Logger} from "../Logger/Logger";
+import {getServerState} from "../main";
 
 
 export function callbackDropTable(db: SKSQL, tableName: string) {
     tableName = tableName.toUpperCase();
-    const databasePath = process.env.SKDB_PATH;
+    const databasePath = getServerState().databasePath;
     const dbPath = path.normalize(databasePath + "/db/");
     if (tableName.startsWith('#') || tableName.toUpperCase() === "DUAL") {
         return;

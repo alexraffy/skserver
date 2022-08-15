@@ -1,12 +1,12 @@
 
 
 import {SKSQL, SQLStatement, TAuthSession, TDBEventsDelegate} from "sksql";
+import {getServerState} from "./main";
 
 
 export function updateWorkerStatus(worker_id: number, status: "SPAWN" | "RUNNING" | "DOWN"): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
         let db2 = new SKSQL();
-        db2.commandModeOnly = true;
 
         let delegate: TDBEventsDelegate = {
             on(db: SKSQL, databaseHashId: string, message: string, payload: any) {
@@ -20,16 +20,18 @@ export function updateWorkerStatus(worker_id: number, status: "SPAWN" | "RUNNING
                 let st = new SQLStatement(db, "Exec usp_heartbeatWorker @worker_id = @worker_id, @status = @status;");
                 st.setParameter("@worker_id", worker_id);
                 st.setParameter("@status", status);
-                st.run();
-                st.close();
-                db2.disconnect(databaseHashId);
-                resolve(true);
+                st.runRemote(false, false).then((r) => {
+                    st.close();
+                    db2.disconnect();
+                    resolve(true);
+                })
+
             },
             authRequired(db: SKSQL, databaseHashId: string): TAuthSession {
-                return {name: "SKDirector", token: "", valid: true};
+                return {name: "SKDirector", token: "", remoteOnly: true};
             }
         }
-        db2.connectToDatabase(process.env.SKWORKER_HEARTBEAT, delegate)
+        db2.connectToDatabase(getServerState().heartBeatHost, delegate)
     });
 
 

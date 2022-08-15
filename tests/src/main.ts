@@ -10,6 +10,9 @@ import * as path from "path";
 import {encryption_c} from "./encryption_c";
 import {encryption_d} from "./encryption_d";
 import {pingpong} from "./pingpong";
+import {remote_only} from "./remote_only";
+import {token} from "./token";
+import {relay} from "./relay";
 
 //@ts-ignore
 global["WebSocket"] = WebSocket;
@@ -33,7 +36,7 @@ try {
 let start = performance.now();
 
 const tests: ((next:()=>void) => void)[] = [create_table_a, create_table_b, encryption_a, encryption_b,
-    encryption_c, encryption_d, pingpong];
+    encryption_c, encryption_d, pingpong, remote_only, token, relay];
 
 let idx = -1;
 const next = () => {

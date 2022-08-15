@@ -1,21 +1,25 @@
 import {CSocket} from "./CSocket";
 import {Logger} from "../Logger/Logger";
 import {
+    compressAB,
+    kModifiedBlockType,
     SKSQL,
     SQLResult,
     SQLStatement,
-    TAuthSession,
+    TAuthSession, TDateTime, TDateTimeCmp,
+    TSQLResult,
     TWSRSQL,
     TWSRSQLResponse,
     WSRSQL,
-    TSQLResult,
     WSRSQLResponse
 } from "sksql";
 import {writeData} from "../Data/writeData";
 import * as path from "path";
+import {getServerState} from "../main";
+import {date_getutcdate} from "sksql/build/Functions/Date/date_getutcdate";
 
 
-function sendResponse(db: SKSQL, socket: CSocket, id: number, param: TWSRSQL, tret: TSQLResult) {
+function sendResponse(db: SKSQL, socket: CSocket, id: string, param: TWSRSQL, st: SQLStatement, tret: TSQLResult) {
     // response
     let res: TWSRSQLResponse = {
         id: param.id,
@@ -24,32 +28,130 @@ function sendResponse(db: SKSQL, socket: CSocket, id: number, param: TWSRSQL, tr
         r: param.r,
         t: []
     };
-    if (param.rd) {
+    if (param.rd && st !== undefined && st.context !== undefined) {
         // return data blocks
-        // TODO
+        for (let i = 0; i < st.context.modifiedBlocks.length; i++) {
+            let mb = st.context.modifiedBlocks[i];
+            // if the table header or block is a temp table, we only send it if it is the result table.
+            if (mb.name.startsWith("#") && mb.name.toUpperCase() !== tret.resultTableName.toUpperCase()) {
+                continue;
+            }
+            let compressed: ArrayBuffer;
+            let indexBlock = -1;
+            let indexTable = -1;
+            let tbl = db.tableInfo.get(mb.name);
+            if (mb.type === kModifiedBlockType.tableHeader) {
+                compressed = compressAB(tbl.pointer.data.tableDef);
+            } else if (mb.type === kModifiedBlockType.tableBlock) {
+                indexBlock = mb.blockIndex;
+                compressed = compressAB(tbl.pointer.data.blocks[mb.blockIndex]);
+            }
+
+            // compress and add to the TSQLResult
+            let dvCompressed = new DataView(compressed);
+            let arr : Uint8Array = new Uint8Array(compressed.byteLength);
+            for (let x = 0; x < compressed.byteLength; x++) {
+                arr[x] = dvCompressed.getUint8(x);
+            }
+            res.t.push(
+                {
+                    id: id,
+                    type: mb.type,
+                    indexBlock: indexBlock,
+                    indexTable: indexTable,
+                    tableName: mb.name,
+                    size: compressed.byteLength,
+                    data: arr
+
+                }
+            );
+
+
+        }
     }
     socket.send(id, WSRSQLResponse, res);
 }
 
 
-export function wsrSQL(db: SKSQL, requestEnv: TAuthSession, socket: CSocket, id: number, param: TWSRSQL, remoteMode: boolean, clientConnectionString: string) {
-    const databasePath = process.env.SKDB_PATH;
+export function wsrSQL(db: SKSQL, requestEnv: TAuthSession, socket: CSocket, id: string, param: TWSRSQL, remoteMode: boolean, clientConnectionString: string) {
+    const databasePath = getServerState().databasePath;
     const dbPath = path.normalize(databasePath + "/db/");
+
     // write to log
-    Logger.instance.write(clientConnectionString + "\t" + param.r);
+    Logger.instance.write(clientConnectionString + "\tTransactionID: " + param.u);
+    Logger.instance.write(clientConnectionString + "\tUser: " + requestEnv.name);
+    Logger.instance.write(clientConnectionString + "\tBroadcast: " + ((param.b === true) ? "YES" : "NO"));
+    Logger.instance.write(clientConnectionString + "\tReturn Data: " + ((param.rd === true) ? "YES" : "NO"));
+    Logger.instance.write(clientConnectionString + "\tSQL: " + param.r);
 
     let st: SQLStatement;
     let ret: SQLResult;
     let tret: TSQLResult;
     // Apply locally
     try {
-        st = new SQLStatement(db, param.r, false);
+        let accessRights = (getServerState().privateDB === true) ? "N" : "RW";
+        // check token
+        const tokens = getServerState().tokenList;
+        for (let i = 0; i < tokens.length; i++) {
+            if (tokens[i].token.toUpperCase() === requestEnv.token.toUpperCase()) {
+                // check the expiry
+                let now = date_getutcdate(undefined) as TDateTime;
+                if (TDateTimeCmp(now, tokens[i].expiry) === -1) {
+                    accessRights = tokens[i].rights as "RW" | "R" | "W" | "N";
+                } else {
+                    Logger.instance.write(clientConnectionString + "\t" + "TOKEN EXPIRED.");
+                    tret = {
+                        error: "TOKEN EXPIRED.",
+                        rowsDeleted: 0,
+                        rowsInserted: 0,
+                        rowCount: 0,
+                        rowsModified: 0,
+                        totalRuntime: 0,
+                        returnValue: undefined,
+                        resultTableName: "",
+                        parserTime: 0,
+                        dropTable: [],
+                        queries: [],
+                        messages: undefined
+                    };
+                    sendResponse(db, socket, id, param, st, tret);
+                    return;
+                }
+                break;
+            }
+        }
+
+        if (accessRights === "N") {
+            Logger.instance.write(clientConnectionString + "\t" + "INVALID TOKEN OR TOKEN NOT FOUND.");
+            tret = {
+                error: "INVALID TOKEN OR TOKEN NOT FOUND.",
+                rowsDeleted: 0,
+                rowsInserted: 0,
+                rowCount: 0,
+                rowsModified: 0,
+                totalRuntime: 0,
+                returnValue: undefined,
+                resultTableName: "",
+                parserTime: 0,
+                dropTable: [],
+                queries: [],
+                messages: undefined
+            };
+            sendResponse(db, socket, id, param, st, tret);
+            return;
+        }
+        let b = false;
+        if (getServerState().relayMode === true) {
+            b = true;
+        }
+        st = new SQLStatement(db, param.r, b, accessRights);
+        st.id = param.u;
         if (param.p !== undefined) {
             for (let i = 0; i < param.p.length; i++) {
                 st.setParameter(param.p[i].name, param.p[i].value, param.p[i].type);
             }
         }
-        ret = st.run() as SQLResult;
+        ret = st.runSync() as SQLResult;
         tret = ret.getStruct();
         if (ret.error !== undefined) {
             Logger.instance.write(clientConnectionString + "\t" + ret.error);
@@ -74,7 +176,7 @@ export function wsrSQL(db: SKSQL, requestEnv: TAuthSession, socket: CSocket, id:
                 messages: undefined
             };
         }
-        sendResponse(db, socket, id, param, tret);
+        sendResponse(db, socket, id, param, st, tret);
         Logger.instance.write(clientConnectionString + "\t" + e.message);
         if (st !== undefined) {
             st.close();
@@ -85,7 +187,7 @@ export function wsrSQL(db: SKSQL, requestEnv: TAuthSession, socket: CSocket, id:
     // writeAll
     writeData(dbPath, db, ()=> {
 
-        sendResponse(db, socket, id, param, tret);
+        sendResponse(db, socket, id, param, st, tret);
 
         if (param.b) {
             // broadcast blocks to other clients

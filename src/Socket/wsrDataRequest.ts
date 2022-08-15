@@ -12,7 +12,7 @@ import {
 } from "sksql";
 
 
-export function wsrDataRequest(db: SKSQL, requestEnv: TAuthSession, socket: CSocket, id: number, param: TWSRDataRequest, remoteMode: boolean, clientConnectionString: string) {
+export function wsrDataRequest(db: SKSQL, requestEnv: TAuthSession, socket: CSocket, id: string, param: TWSRDataRequest, remoteMode: boolean, clientConnectionString: string) {
 
     for (let i = 0; i < db.allTables.length;i++) {
         let t = db.allTables[i];
@@ -29,7 +29,7 @@ export function wsrDataRequest(db: SKSQL, requestEnv: TAuthSession, socket: CSoc
                     data: new Uint8Array(compressedData)
                 } as TWSRDataResponse
             );
-            if (remoteMode !== true) {
+            if (remoteMode === false || def.name.toUpperCase() === "ROUTINES" ) {
                 for (let x = 0; x < t.data.blocks.length; x++) {
                     let compressedBlock = compressAB(t.data.blocks[x]);
                     socket.send(id, WSRDataRequest, {

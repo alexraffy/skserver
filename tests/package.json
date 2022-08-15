@@ -7,7 +7,7 @@
     "skserver-tests-run-tests": "node build/main.js"
   },
   "dependencies": {
-    "sksql": "^1.1.32",
+    "sksql": "^1.1.44",
     "node-fetch": "^2.6.7",
     "ws": "^8.4.2"
   },

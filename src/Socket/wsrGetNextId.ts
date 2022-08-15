@@ -10,11 +10,12 @@ import {
 import {CSocket} from "./CSocket";
 import path from "path";
 import {writeData} from "../Data/writeData";
+import {getServerState} from "../main";
 
 
 
-export function wsrGetNextId(db: SKSQL, requestEnv: TAuthSession, socket: CSocket, id: number, param: TWSRGNID, clientConnectionString: string) {
-    const databasePath = process.env.SKDB_PATH;
+export function wsrGetNextId(db: SKSQL, requestEnv: TAuthSession, socket: CSocket, id: string, param: TWSRGNID, clientConnectionString: string) {
+    const databasePath = getServerState().databasePath;
     const dbPath = path.normalize(databasePath + "/db/");
 
     let uid = param.uid;

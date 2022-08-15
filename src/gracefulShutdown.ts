@@ -41,7 +41,7 @@ export function gracefulShutdown(code: number) {
                 getServerState().socket.closeAll();
             }
             clearPID();
-            if (process.env.SKWORKER_HEARTBEAT !== undefined) {
+            if (getServerState().heartBeatHost !== undefined) {
                 updateWorkerStatus(parseInt(getServerState().workerId), "DOWN").then((v) => {
                    process.exit(code);
                 });

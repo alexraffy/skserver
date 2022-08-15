@@ -11,7 +11,17 @@ export function create_table_a(next: ()=> void) {
     let dbPath = "./db/step1";
     let encryptionKey = ""; // "kYp2s5v8y/B?E(H+MbQeThWmZq4t7w9z"
     let port = 30001;
-    setupServer(dbPath, encryptionKey, port, [
+    setupServer(1, false,
+        dbPath,
+        encryptionKey,
+        port,
+        "",
+        undefined,
+        undefined,
+        undefined,
+        false,
+        false,
+        [
         {
             pattern: "listening on port",
             callback: (child, pattern: string) => {
@@ -36,7 +46,7 @@ function connect(child: ChildProcess, port) {
             if (message === WSRSQLResponse) {
                 if ((payload as TWSRSQLResponse).u === lastStatementUnique) {
                     let st3 = new SQLStatement(db, "SELECT * FROM t1");
-                    let ret3 = st3.run();
+                    let ret3 = st3.runSync();
                     let rows = ret3.getRows();
                     st3.close();
                     assert(rows[0]["b"] === "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
@@ -53,11 +63,11 @@ function connect(child: ChildProcess, port) {
         },
         ready(db: SKSQL, databaseHashId: string): any {
             let st = new SQLStatement(db, "CREATE TABLE t1(a UINT32 IDENTITY(1,1), b VARCHAR(26));");
-            st.run();
+            st.runSync();
             st.close();
             let st2 = new SQLStatement(db, "INSERT INTO t1(b) VALUES ('ABCDEFGHIJKLMNOPQRSTUVWXYZ');");
             lastStatementUnique = st2.id;
-            st2.run();
+            st2.runSync();
             st2.close();
 
 

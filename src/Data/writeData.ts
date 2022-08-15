@@ -7,6 +7,9 @@ import {getServerState} from "../main";
 import {encrypt} from "./encrypt";
 
 export function writeData(dbFolder: string, d: SKSQL, callback) {
+    if (getServerState().relayMode === true) {
+        return callback();
+    }
     taskStarted();
     let currentTableIndex = -1;
     processNextTable(dbFolder, d, currentTableIndex, callback);

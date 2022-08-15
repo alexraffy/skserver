@@ -4,6 +4,7 @@
 import {WriteStream} from "fs";
 import * as path from "path";
 import * as fs from "fs";
+import {getServerState} from "../main";
 
 export class Logger {
     private static _instance: Logger;
@@ -27,7 +28,7 @@ export class Logger {
     }
 
     write(...theArgs: string[]) {
-        let message = new Date().toISOString() + "\t" + theArgs.reduce((previous, current) => {
+        let message = getServerState().workerId + "\t" + new Date().toISOString() + "\t" + theArgs.reduce((previous, current) => {
             return previous + current;
         })
         this.stream.write(message + "\r\n");

@@ -7,7 +7,16 @@ export function encryption_a( next: ()=> void) {
     let dbPath = "./db/step1";
     let encryptionKey = "kYp2s5v8y/B?E(H+MbQeThWmZq4t7w9z"
     let port = 30001;
-    setupServer(dbPath, encryptionKey, port, [
+    setupServer(1, false,
+        dbPath,
+        encryptionKey,
+        port,
+        "",
+        undefined,
+        undefined,
+        undefined,
+        false,
+        false,[
         {
             pattern: "Database is NOT encrypted and a key was provided",
             callback: (child, pattern: string) => {

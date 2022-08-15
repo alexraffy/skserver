@@ -1,6 +1,6 @@
 {
   "name": "skserver",
-  "version": "1.1.27",
+  "version": "1.1.44",
   "description": "Server for sksql",
   "author": {
     "name": "ARaffy"
@@ -11,9 +11,8 @@
   "scripts": {
     "00-skserver-runAll": "npm run 02-skserver-build",
     "02-skserver-build": "tsc",
-    "03-skserver-run-queue": "cross-env SKDB_PATH=C:\\SKSQL_DBS\\Catalog\\queue\\ SKWORKER_ID=5 SKWORKER_ALIVE=360000 SKWORKER_PORT=30001 node build/main.js",
-    "04-skserver-run-accounts": "cross-env SKDB_PATH=C:\\SKSQL_DBS\\Catalog\\accounts\\ SKWORKER_ID=6 SKWORKER_ALIVE=360000 SKWORKER_PORT=30000 node build/main.js",
-    "03-skserver-run-main": "cross-env SKWORKER_7Z=C:\\Users\\alex\\Downloads\\7z2200-extra\\x64\\7za.exe SKDB_PATH=C:\\SKSQL_DBS\\Catalog\\main\\ SKWORKER_ENCRYPTION=\"kYp2s5v8y/B?E(H+MbQeThWmZq4t7w9z\" SKWORKER_ID=5 SKWORKER_ALIVE=360000 SKWORKER_PORT=30001 node build/main.js"
+    "03-skserver-run-main":  "node build/main.js --dbPath=C:\\SKSQL_DBS\\Catalog\\main\\ --port=30001 --alive=0 --id=1 --encryption=kYp2s5v8y/B?E(H+MbQeThWmZq4t7w9z --7z=C:\\Users\\alex\\Downloads\\7z2200-extra\\x64\\7za.exe",
+    "04-skserver-run-relay": "node build/main.js --relay=ws://localhost:30001 --port=30002 --alive=0 --id=2 --7z=C:\\Users\\alex\\Downloads\\7z2200-extra\\x64\\7za.exe"
   },
   "license": "SSPL",
   "devDependencies": {
@@ -23,7 +22,7 @@
     "typescript": "^4.6.3"
   },
   "dependencies": {
-    "sksql": "1.1.32",
+    "sksql": "1.1.44",
     "ws": "^8.3.0"
   }
 }

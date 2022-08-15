@@ -2,8 +2,6 @@ import * as path from "path";
 import * as fs from "fs";
 
 
-
-
 let pidFile = path.normalize(process.env.PWD + "/" + "skserver.pid");
 if (fs.existsSync(pidFile)) {
     let pidData = fs.readFileSync(pidFile);

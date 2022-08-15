@@ -10,7 +10,16 @@ export function pingpong( next:()=>void) {
     let dbPath = "./db/step3";
     let encryptionKey = "";
     let port = 30001;
-    setupServer(dbPath, encryptionKey, port, [
+    setupServer(1, false,
+        dbPath,
+        encryptionKey,
+        port,
+        "",
+        undefined,
+        undefined,
+        undefined,
+        false,
+        false,[
         {
             pattern: "listening on port",
             callback: (child, pattern: string) => {
@@ -40,14 +49,14 @@ function connect(child: ChildProcess, port) {
 
                 if (pingpong_score === 10) {
                     let selectAll = new SQLStatement(db, "SELECT * FROM Tbl_pingpong;");
-                    let ret = selectAll.run();
+                    let ret = selectAll.runSync();
                     console.table(ret.getRows());
                     selectAll.close();
                     return child.send({action: "STOP"});
                 }
 
                 let ping = new SQLStatement(db, "INSERT INTO Tbl_pingpong(worker_id, event) VALUES (1, 'PING');");
-                ping.run();
+                ping.runSync();
                 ping.close();
 
             }
@@ -55,13 +64,12 @@ function connect(child: ChildProcess, port) {
         authRequired(db: SKSQL, databaseHashId: string): TAuthSession {
             return {
                 name: "PONG WORKER 1",
-                valid: true,
                 token: ""
             } as TAuthSession;
         },
         ready(db: SKSQL, databaseHashId: string): any {
             let st = new SQLStatement(db, "CREATE TABLE Tbl_pingpong(worker_id UINT32, timestamp datetime DEFAULT GETUTCDATE(), event VARCHAR(4));");
-            st.run();
+            st.runSync();
             st.close();
             // launch worker 2
             run_cmd("node", ["build/pong.js"], {PONGWORKER_ID: 2, PONGWORKER_PORT: port}, []).then((v) => {

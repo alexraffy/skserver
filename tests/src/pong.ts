@@ -21,13 +21,12 @@ db.connectToServer("ws://localhost:" + port, {
         if (message === WSRSQL) {
             let pongSt = new SQLStatement(db, "INSERT INTO Tbl_pingpong(worker_id, event) VALUES (@worker_id, 'PONG')");
             pongSt.setParameter("@worker_id", workerId);
-            pongSt.run();
+            pongSt.runSync();
         }
     },
     authRequired(db: SKSQL, databaseHashId: string): TAuthSession {
         return {
             name: "PONG WORKER " + workerId,
-            valid: true,
             token: ""
         } as TAuthSession;
     },

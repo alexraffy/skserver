@@ -10,7 +10,16 @@ export function encryption_c(next: ()=> void) {
     let dbPath = "./db/step2";
     let encryptionKey = "kYp2s5v8y/B?E(H+MbQeThWmZq4t7w9z"
     let port = 30001;
-    setupServer(dbPath, encryptionKey, port, [
+    setupServer(1, false,
+        dbPath,
+        encryptionKey,
+        port,
+        "",
+        undefined,
+        undefined,
+        undefined,
+        false,
+        false,[
         {
             pattern: "listening on port",
             callback: (child, pattern: string) => {
@@ -47,12 +56,12 @@ function connect(child: ChildProcess, port) {
         },
         ready(db: SKSQL, databaseHashId: string): any {
             let st3 = new SQLStatement(db, "SELECT * FROM t1");
-            let ret3 = st3.run();
+            let ret3 = st3.runSync();
             let rows = ret3.getRows();
             st3.close();
             assert(rows[0]["b"] === "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
             let st4 = new SQLStatement(db, "DROP TABLE t1");
-            let ret4 = st4.run();
+            let ret4 = st4.runSync();
             st4.close();
             child.send({ action: 'STOP' });
         },
