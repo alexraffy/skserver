@@ -1,4 +1,4 @@
-import {SKSQL, ITable, readTableDefinition, kBlockHeaderField, compressAB} from "sksql";
+import {SKSQL, ITable, readTableDefinition, offs, compressAB} from "sksql";
 import * as fs from "fs";
 import * as path from "path"
 import {taskDone, taskStarted} from "../gracefulShutdown";
@@ -27,13 +27,13 @@ function processNextTable(dbFolder: string, d: SKSQL, currentTableIndex: number,
         return processNextTable(dbFolder, d, currentTableIndex, callback);
     }
     // create the header
-    const name = def.name.toUpperCase();
+    const name = def.object_id.toUpperCase();
     const headerFilename = path.normalize(dbFolder + "/" + name + ".head");
     const blocksFolder = path.normalize(dbFolder + "/" + name + "/");
 
     let dvHeader = new DataView(currentTable.data.tableDef);
-    if (dvHeader.getUint8(kBlockHeaderField.BlockDirty) === 1) {
-        dvHeader.setUint8(kBlockHeaderField.BlockDirty, 0);
+    if (dvHeader.getUint8(offs().BlockDirty) === 1) {
+        dvHeader.setUint8(offs().BlockDirty, 0);
         if (getServerState().encryptionKey !== undefined) {
             let encrypted = encrypt(currentTable.data.tableDef);
             let encryptedDV = new DataView(encrypted);
@@ -50,8 +50,8 @@ function processNextTable(dbFolder: string, d: SKSQL, currentTableIndex: number,
     for (let i = 0; i < currentTable.data.blocks.length; i++) {
         const fileName = path.normalize(blocksFolder + i + ".blk");
         let dvBlock = new DataView(currentTable.data.blocks[i]);
-        if (dvBlock.getUint8(kBlockHeaderField.BlockDirty) === 1) {
-            dvBlock.setUint8(kBlockHeaderField.BlockDirty, 0);
+        if (dvBlock.getUint8(offs().BlockDirty) === 1) {
+            dvBlock.setUint8(offs().BlockDirty, 0);
 
             if (getServerState().encryptionKey !== undefined) {
                 let encrypted = encrypt(currentTable.data.blocks[i])

@@ -1,5 +1,5 @@
 import {
-    kBlockHeaderField,
+    offs,
     readTableDefinition,
     SKSQL,
     TAuthSession,
@@ -27,8 +27,8 @@ export function wsrGetNextId(db: SKSQL, requestEnv: TAuthSession, socket: CSocke
         ret.push(def.identityValue);
     }
     let dv = new DataView(tbl.data.tableDef);
-    dv.setUint8(kBlockHeaderField.BlockDirty, 1);
-    dv.setUint32(kBlockHeaderField.TableDefIdentityValue, def.identityValue);
+    dv.setUint8(offs().BlockDirty, 1);
+    dv.setUint32(offs().TableDefIdentityValue, def.identityValue);
 
 
     writeData(dbPath, db, ()=> {

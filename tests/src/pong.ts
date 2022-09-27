@@ -1,13 +1,17 @@
 
 import {WebSocket} from 'ws';
-import {performance} from "perf_hooks";
-import {SKSQL, SQLStatement, TAuthSession, TWSRSQLResponse, WSRSQL, WSRSQLResponse} from "sksql";
-import assert from "assert";
-
-
 
 //@ts-ignore
 global["WebSocket"] = WebSocket;
+
+//@ts-ignore
+global["worker_threads"] = require("worker_threads");
+
+//@ts-ignore
+global["perf_hooks"] = require("perf_hooks");
+
+import {SKSQL, SQLStatement, TAuthSession, TWSRSQLResponse, WSRSQL, WSRSQLResponse} from "sksql";
+
 
 
 let workerId = parseInt(process.env.PONGWORKER_ID);

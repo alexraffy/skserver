@@ -1,6 +1,6 @@
 {
   "name": "skserver",
-  "version": "1.1.44",
+  "version": "1.2.5",
   "description": "Server for sksql",
   "author": {
     "name": "ARaffy"
@@ -12,7 +12,8 @@
     "00-skserver-runAll": "npm run 02-skserver-build",
     "02-skserver-build": "tsc",
     "03-skserver-run-main":  "node build/main.js --dbPath=C:\\SKSQL_DBS\\Catalog\\main\\ --port=30001 --alive=0 --id=1 --encryption=kYp2s5v8y/B?E(H+MbQeThWmZq4t7w9z --7z=C:\\Users\\alex\\Downloads\\7z2200-extra\\x64\\7za.exe",
-    "04-skserver-run-relay": "node build/main.js --relay=ws://localhost:30001 --port=30002 --alive=0 --id=2 --7z=C:\\Users\\alex\\Downloads\\7z2200-extra\\x64\\7za.exe"
+    "04-skserver-run-relay": "node build/main.js --relay=ws://localhost:30001 --port=30002 --alive=0 --id=2 --7z=C:\\Users\\alex\\Downloads\\7z2200-extra\\x64\\7za.exe",
+    "05-skserver-usage": "node build/main.js"
   },
   "license": "SSPL",
   "devDependencies": {
@@ -22,7 +23,7 @@
     "typescript": "^4.6.3"
   },
   "dependencies": {
-    "sksql": "1.1.44",
+    "sksql": "1.2.5",
     "ws": "^8.3.0"
   }
 }

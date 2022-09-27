@@ -110,9 +110,10 @@ export async function checkData(db: SKSQL, folder: string) {
 
                     blockIndex++;
                     fileExists = false;
-                    const blockFile = path.normalize(dbPath + "/" + td.name + "/" + blockIndex + ".blk");
+                    const blockFile = path.normalize(dbPath + "/" + file.replace(".head", "") + "/" + blockIndex + ".blk");
                     try {
                         let buf: Buffer = fs.readFileSync(blockFile);
+                        Logger.instance.write("Found block " + blockIndex);
                         let abuf = new ArrayBuffer(buf.byteLength);
                         let dvBlock = new DataView(abuf);
                         for (let i = 0; i < buf.byteLength; i++) {

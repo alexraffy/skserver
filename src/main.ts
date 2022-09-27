@@ -1,3 +1,15 @@
+import {WebSocket} from "ws";
+
+//@ts-ignore
+global["WebSocket"] = WebSocket;
+//@ts-ignore
+global["worker_threads"] = require("worker_threads");
+
+//@ts-ignore
+global["perf_hooks"] = require("perf_hooks");
+
+
+
 import {Timer} from "./Timer/Timer";
 import {gracefulShutdown, taskDone, taskStarted} from "./gracefulShutdown";
 import {Logger} from "./Logger/Logger";
@@ -17,15 +29,9 @@ import * as os from "os";
 import * as fs from "fs";
 import {Stats} from "fs";
 import {readTokenFile} from "./readTokenFile";
-import {WebSocket} from "ws";
 
-//@ts-ignore
-global["WebSocket"] = WebSocket;
 
-const {
-    performance,
-    PerformanceObserver
-} = require('perf_hooks');
+
 
 const VERSION = getPackageJSONVersion(path.normalize("./package.json"));
 

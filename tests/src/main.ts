@@ -1,6 +1,12 @@
 import {WebSocket} from 'ws';
 import {performance} from "perf_hooks";
 
+//@ts-ignore
+global["worker_threads"] = require("worker_threads");
+
+//@ts-ignore
+global["perf_hooks"] = require("perf_hooks");
+
 import {create_table_a} from "./create_table_a";
 import {encryption_a} from "./encryption_a";
 import {create_table_b} from "./create_table_b";
